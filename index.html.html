@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDC Summer 2026 Schedule</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a18;font-size:14px}
+.app{max-width:1150px;margin:0 auto;padding:24px 16px}
+header{margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.header-left h1{font-size:20px;font-weight:600;color:#1a1a18;margin-bottom:4px}
+.header-left p{font-size:13px;color:#888780}
+.sync-status{font-size:11px;padding:5px 10px;border-radius:8px;font-weight:500}
+.sync-ok{background:#eaf3de;color:#3b6d11}
+.sync-saving{background:#faeeda;color:#854f0b}
+.sync-error{background:#fcebeb;color:#a32d2d}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.month-btns{display:flex;gap:6px}
+.month-btn{background:#fff;border:0.5px solid #c4c2ba;border-radius:8px;padding:6px 20px;font-size:13px;font-weight:500;cursor:pointer;color:#444441}
+.month-btn:hover{background:#eeeee8}
+.month-btn.active{background:#2c2c2a;color:#fff;border-color:#2c2c2a}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;padding:10px 14px;background:#fff;border-radius:10px;border:0.5px solid #d3d1c7}
+.leg{display:flex;align-items:center;gap:6px;font-size:12px;color:#5f5e5a}
+.leg-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.hint{font-size:11px;color:#888780;margin-bottom:10px;padding:6px 12px;background:#fff;border-radius:8px;border:0.5px solid #d3d1c7}
+.sr-note{font-size:11px;color:#888780;margin-bottom:14px;padding:6px 12px;background:#fff;border-radius:8px;border-left:3px solid #b4b2a9}
+.summary{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.sum-card{background:#fff;border:0.5px solid #d3d1c7;border-radius:10px;padding:10px 14px;min-width:90px;text-align:center}
+.sum-name{font-size:11px;color:#888780;margin-bottom:2px}
+.sum-wfh{font-size:20px;font-weight:600;color:#185fa5}
+.sum-sub{font-size:10px;color:#b4b2a9}
+.grid-wrap{overflow-x:auto;background:#fff;border-radius:12px;border:0.5px solid #d3d1c7}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{padding:7px 3px;text-align:center;font-weight:500;font-size:10px;color:#888780;border-bottom:1px solid #e8e6e0;background:#faf9f6}
+th.name-col{text-align:left;padding-left:12px;width:80px;font-size:11px}
+td{padding:3px 2px;text-align:center;border-bottom:0.5px solid #f0eee8}
+td.name-cell{text-align:left;padding-left:12px;font-weight:500;font-size:12px;color:#2c2c2a;white-space:nowrap;background:#faf9f6;border-right:0.5px solid #e8e6e0}
+.day-cell{cursor:pointer;border-radius:5px;width:100%;height:26px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;transition:all 0.1s;user-select:none}
+.day-cell:hover{filter:brightness(0.9);transform:scale(0.96)}
+.in{background:#c0dd97;color:#27500a}
+.wfh{background:#b5d4f4;color:#0c447c}
+.out{background:#f7c1c1;color:#791f1f}
+.holiday{background:#d3d1c7;color:#444441}
+.flag{background:#f0997b;color:#712b13;border:1.5px solid #d85a30}
+.weekend{background:transparent;cursor:default}
+.wed-col{background:#f5f4f0}
+.mtg-dot{cursor:pointer;margin:3px auto 0;width:8px;height:8px;border-radius:50%;transition:background 0.15s}
+.cov-cell{border-radius:4px;font-size:10px;font-weight:600;height:22px;display:flex;align-items:center;justify-content:center}
+.cov-ok{background:#eaf3de;color:#3b6d11}
+.cov-warn{background:#faeeda;color:#854f0b}
+.cov-bad{background:#fcebeb;color:#a32d2d}
+.flags-section{margin-top:16px;background:#fff;border-radius:12px;border:0.5px solid #f7c1c1;overflow:hidden}
+.flags-header{background:#fcebeb;padding:10px 16px;font-size:13px;font-weight:500;color:#791f1f}
+.flags-list{padding:8px 0}
+.flag-item{font-size:12px;color:#5f5e5a;padding:6px 16px;border-bottom:0.5px solid #f5f4f0}
+.flag-item:last-child{border-bottom:none}
+.flag-item.resolved{background:#eaf3de;border-left:3px solid #7ab648}
+.flag-item.resolved .flag-msg{color:#3b6d11;text-decoration:line-through;opacity:0.7}
+.flag-item.resolved .flag-date{color:#3b6d11}
+.flag-date{font-weight:600;color:#a32d2d;white-space:nowrap;font-size:11px}
+.resolved-badge{font-size:10px;font-weight:600;color:#3b6d11;background:#c0dd97;border-radius:4px;padding:1px 6px;margin-left:8px}
+.flag-actions{margin-top:4px;display:flex;gap:12px}
+.add-note-btn{font-size:11px;color:#854f0b;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline}
+.add-note-btn:hover{color:#d85a30}
+.resolve-btn{font-size:11px;color:#3b6d11;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline}
+.resolve-btn:hover{color:#27500a}
+.flag-note{margin-top:5px;width:100%;font-size:11px;color:#5f5e5a;background:#fff8f0;border:0.5px solid #f5c47a;border-radius:6px;padding:5px 8px;resize:none;font-family:inherit;line-height:1.5;outline:none}
+.flag-note:focus{border-color:#d85a30;background:#fff}
+.flag-note::placeholder{color:#c4b89a}
+.no-flags{padding:12px 16px;font-size:12px;color:#888780}
+.loading{text-align:center;padding:40px;color:#888780;font-size:13px}
+.tooltip{position:fixed;background:#2c2c2a;color:#fff;border-radius:8px;padding:7px 11px;font-size:11px;pointer-events:none;z-index:9999;max-width:230px;line-height:1.6;box-shadow:0 4px 12px rgba(0,0,0,0.25)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="header-left">
+      <h1>CDC Summer 2026 — Remote Work Schedule</h1>
+      <p>June 1 – August 21, 2026 &nbsp;·&nbsp; Click any cell to cycle: IN → WFH → OUT &nbsp;·&nbsp; Click dot under date for meeting day</p>
+    </div>
+    <div class="sync-status sync-ok" id="sync-status">● synced</div>
+  </header>
+  <div class="toolbar">
+    <div class="month-btns">
+      <button class="month-btn active" id="mb-0" onclick="goMonth(0)">June</button>
+      <button class="month-btn" id="mb-1" onclick="goMonth(1)">July</button>
+      <button class="month-btn" id="mb-2" onclick="goMonth(2)">August</button>
+    </div>
+    <button onclick="loadFromDB()" style="background:#fff;border:0.5px solid #c4c2ba;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;color:#444441">↻ refresh</button>
+  </div>
+  <div class="legend">
+    <span class="leg"><span class="leg-dot" style="background:#c0dd97"></span>IN OFFICE</span>
+    <span class="leg"><span class="leg-dot" style="background:#b5d4f4"></span>WFH</span>
+    <span class="leg"><span class="leg-dot" style="background:#f7c1c1"></span>OUT</span>
+    <span class="leg"><span class="leg-dot" style="background:#d3d1c7"></span>HOL</span>
+    <span class="leg"><span class="leg-dot" style="background:#f0997b;border:1.5px solid #d85a30"></span>FLAGGED</span>
+    <span class="leg"><span class="leg-dot" style="background:#c0392b"></span>MEETING DAY</span>
+  </div>
+  <p class="hint">Click any cell to cycle states · Hover to preview next state · Wednesday WFH triggers a policy flag · Holidays &amp; weekends locked · Dot under date = meeting day</p>
+  <p class="sr-note">Shannon (supervisor) is shown for reference but is not counted toward the minimum office coverage of 3.</p>
+  <div id="summary" class="summary"></div>
+  <div class="grid-wrap"><div id="grid"><div class="loading">Loading schedule from database...</div></div></div>
+  <div id="flags-section"></div>
+</div>
+<div class="tooltip" id="tip" style="display:none"></div>
+
+<script>
+// ── Supabase config ───────────────────────────────────────────────────────
+var SUPA_URL = 'https://ixuihidvjidvsyfjsixt.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4dWloaWR2amlkdnN5ZmpzaXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NzUyMDEsImV4cCI6MjA5NDI1MTIwMX0.7a06Z7WOFeYyKC3E3Kisks5jcMEquA7UO-0BJaylx00';
+
+function supa(path, method, body) {
+  return fetch(SUPA_URL + '/rest/v1/' + path, {
+    method: method || 'GET',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'resolution=merge-duplicates,return=minimal' : 'return=minimal'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────
+var PEOPLE = ['Idalia','Nicole','Bri','Zach','Lauren','Rachel','Student'];
+var WFH_PREFS = {Idalia:[2,5],Nicole:[2,5],Bri:[2,5],Zach:[1,4],Lauren:[1,4],Rachel:[1,4],Student:[]};
+var HOLIDAYS = {'2026-06-19':'Juneteenth','2026-07-03':'Independence Day (obs)'};
+var CYCLE = ['in','wfh','out'];
+var DOWF = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var DOWS = ['S','M','T','W','T','F','S'];
+var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var MONTH_DEFS = [{y:2026,m:5,label:'June'},{y:2026,m:6,label:'July'},{y:2026,m:7,label:'August'}];
+
+function pad(n){return String(n).padStart(2,'0');}
+function dkey(y,m,d){return y+'-'+pad(m)+'-'+pad(d);}
+function inRange(k){return k>='2026-06-01'&&k<='2026-08-21';}
+
+var schedule = {};
+var srSched = {};
+var defaultSchedule = {};
+var defaultSR = {};
+var flagNotes = {};
+var flagResolved = {};
+var meetingDays = {};
+var currentMonth = 0;
+var _currentFlags = [];
+var saveTimer = null;
+
+// ── Init defaults ─────────────────────────────────────────────────────────
+function initSchedule(){
+  for(var dt=new Date(2026,4,25);dt<=new Date(2026,8,5);dt.setDate(dt.getDate()+1)){
+    var k=dkey(dt.getFullYear(),dt.getMonth()+1,dt.getDate());
+    var dow=dt.getDay();
+    schedule[k]={};
+    srSched[k]=(dow===0||dow===6)?'weekend':HOLIDAYS[k]?'holiday':'in';
+    for(var pi=0;pi<PEOPLE.length;pi++){
+      var p=PEOPLE[pi];
+      if(dow===0||dow===6){schedule[k][p]='weekend';continue;}
+      if(HOLIDAYS[k]){schedule[k][p]='holiday';continue;}
+      schedule[k][p]=WFH_PREFS[p].includes(dow)?'wfh':'in';
+    }
+  }
+  var keys=Object.keys(schedule);
+  for(var i=0;i<keys.length;i++){
+    var k=keys[i];
+    var dow=new Date(k+'T00:00:00').getDay();
+    if(schedule[k]['Student']==='weekend'||schedule[k]['Student']==='holiday') continue;
+    schedule[k]['Student']=[2,5].includes(dow)?'in':'out';
+  }
+  function s1(p,k,v){if(schedule[k]&&schedule[k][p]!=='weekend') schedule[k][p]=v;}
+  function sR(p,s,e,v){for(var dt=new Date(s);dt<=new Date(e);dt.setDate(dt.getDate()+1)){var k=dkey(dt.getFullYear(),dt.getMonth()+1,dt.getDate());if(schedule[k]&&schedule[k][p]!=='weekend') schedule[k][p]=v;}}
+  function sr1(k,v){if(srSched[k]&&srSched[k]!=='weekend'&&srSched[k]!=='holiday') srSched[k]=v;}
+  function srR(s,e,v){for(var dt=new Date(s);dt<=new Date(e);dt.setDate(dt.getDate()+1)){var k=dkey(dt.getFullYear(),dt.getMonth()+1,dt.getDate());if(srSched[k]&&srSched[k]!=='weekend'&&srSched[k]!=='holiday') srSched[k]=v;}}
+  sr1('2026-06-02','wfh');sr1('2026-06-04','wfh');sr1('2026-06-09','wfh');
+  sr1('2026-06-11','wfh');sr1('2026-06-23','wfh');
+  srR('2026-06-15','2026-06-17','out');sr1('2026-06-18','out');
+  srR('2026-06-25','2026-07-02','out');
+  s1('Idalia','2026-06-23','out');sR('Idalia','2026-06-24','2026-06-26','out');
+  sR('Idalia','2026-07-06','2026-07-10','out');
+  s1('Rachel','2026-07-10','out');sR('Rachel','2026-08-03','2026-08-07','out');
+  sR('Nicole','2026-08-03','2026-08-07','out');
+  // snapshot
+  var ks=Object.keys(schedule);
+  for(var i=0;i<ks.length;i++){var k=ks[i];defaultSchedule[k]={};for(var pi=0;pi<PEOPLE.length;pi++) defaultSchedule[k][PEOPLE[pi]]=schedule[k][PEOPLE[pi]];}
+  var srks=Object.keys(srSched);
+  for(var i=0;i<srks.length;i++) defaultSR[srks[i]]=srSched[srks[i]];
+}
+
+// ── Supabase load/save ────────────────────────────────────────────────────
+function setSyncStatus(state) {
+  var el = document.getElementById('sync-status');
+  if(!el) return;
+  if(state==='saving'){el.className='sync-status sync-saving';el.textContent='● saving...';}
+  else if(state==='error'){el.className='sync-status sync-error';el.textContent='● save failed';}
+  else{el.className='sync-status sync-ok';el.textContent='● synced';}
+}
+
+function loadFromDB() {
+  setSyncStatus('saving');
+  return supa('cdc_schedule?select=*').then(function(r){return r.json();}).then(function(rows){
+    if(!Array.isArray(rows)) return;
+    for(var i=0;i<rows.length;i++){
+      var row=rows[i];
+      if(row.person==='_meta'){
+        // metadata row: meeting days, flag notes, flag resolved
+        try{
+          var meta=JSON.parse(row.status);
+          if(meta.meetingDays) Object.assign(meetingDays,meta.meetingDays);
+          if(meta.flagNotes) Object.assign(flagNotes,meta.flagNotes);
+          if(meta.flagResolved) Object.assign(flagResolved,meta.flagResolved);
+        }catch(e){}
+      } else if(row.is_sr){
+        if(srSched[row.date]!==undefined&&srSched[row.date]!=='weekend'&&srSched[row.date]!=='holiday') srSched[row.date]=row.status;
+      } else {
+        if(schedule[row.date]&&schedule[row.date][row.person]!==undefined&&schedule[row.date][row.person]!=='weekend'&&schedule[row.date][row.person]!=='holiday') schedule[row.date][row.person]=row.status;
+      }
+    }
+    setSyncStatus('ok');
+    render();
+  }).catch(function(){setSyncStatus('error');render();});
+}
+
+function scheduleSave(){
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer=setTimeout(doSave, 1200);
+}
+
+function doSave(){
+  setSyncStatus('saving');
+  var rows=[];
+  // schedule diffs
+  var ks=Object.keys(schedule);
+  for(var i=0;i<ks.length;i++){
+    var k=ks[i]; if(!inRange(k)) continue;
+    for(var pi=0;pi<PEOPLE.length;pi++){
+      var p=PEOPLE[pi];
+      if(schedule[k][p]!==defaultSchedule[k][p]) rows.push({person:p,date:k,status:schedule[k][p],is_sr:false});
+    }
+  }
+  // sr diffs
+  var srks=Object.keys(srSched);
+  for(var i=0;i<srks.length;i++){
+    var k=srks[i];
+    if(inRange(k)&&srSched[k]!==defaultSR[k]) rows.push({person:'Shannon',date:k,status:srSched[k],is_sr:true});
+  }
+  // metadata row
+  rows.push({person:'_meta',date:'2026-01-01',status:JSON.stringify({meetingDays:meetingDays,flagNotes:flagNotes,flagResolved:flagResolved}),is_sr:false});
+
+  supa('cdc_schedule?on_conflict=person,date','POST',rows).then(function(r){
+    if(r.ok||r.status===201||r.status===204) setSyncStatus('ok');
+    else setSyncStatus('error');
+  }).catch(function(){setSyncStatus('error');});
+}
+
+// ── Weeks ─────────────────────────────────────────────────────────────────
+function buildAllWeeks(){
+  var weeks=[];
+  var first=new Date(2026,5,1);
+  var dow=first.getDay();
+  first.setDate(first.getDate()-(dow===0?6:dow-1));
+  for(var mon=new Date(first);;mon.setDate(mon.getDate()+7)){
+    var wk=[];
+    for(var i=0;i<5;i++){
+      var dt=new Date(mon);dt.setDate(dt.getDate()+i);
+      var k=dkey(dt.getFullYear(),dt.getMonth()+1,dt.getDate());
+      wk.push({d:dt.getDate(),m:dt.getMonth(),y:dt.getFullYear(),k:k,dow:dt.getDay(),ir:inRange(k)});
+    }
+    if(wk.some(function(x){return x.ir;})) weeks.push(wk);
+    if(wk[4].k>='2026-08-21') break;
+  }
+  return weeks;
+}
+var ALL_WEEKS=buildAllWeeks();
+
+function getMonthWeeks(mi){
+  var m=MONTH_DEFS[mi].m;
+  return ALL_WEEKS.filter(function(wk){return wk.some(function(d){return d.m===m&&d.ir;});}).map(function(wk){
+    return wk.map(function(day){
+      return {d:day.d,m:day.m,y:day.y,k:day.k,dow:day.dow,ir:day.ir,tag:day.m===m?'this':(day.m<m?'overflow_prev':'overflow_next')};
+    });
+  });
+}
+
+// ── Flags ─────────────────────────────────────────────────────────────────
+function getWeekStart(k){var dt=new Date(k+'T00:00:00'),dow=dt.getDay();var mon=new Date(dt);mon.setDate(dt.getDate()+(dow===0?-6:1-dow));return dkey(mon.getFullYear(),mon.getMonth()+1,mon.getDate());}
+function leaveInWeek(p,wk){var mon=new Date(wk+'T00:00:00');for(var i=0;i<5;i++){var d=new Date(mon);d.setDate(d.getDate()+i);var k=dkey(d.getFullYear(),d.getMonth()+1,d.getDate());if(schedule[k]&&schedule[k][p]==='out') return true;}return false;}
+
+function checkFlags(){
+  var flags=[],seen={};
+  function add(k,msg){if(!seen[msg]){seen[msg]=true;flags.push({date:k,msg:msg});}}
+  var all=Object.keys(schedule).filter(inRange).sort();
+  for(var i=0;i<all.length;i++){
+    var k=all[i];
+    var dow=new Date(k+'T00:00:00').getDay();
+    if(dow===0||dow===6||HOLIDAYS[k]) continue;
+    var cnt=PEOPLE.filter(function(p){return schedule[k][p]==='in';}).length;
+    if(cnt<3) add(k,'Coverage: only '+cnt+' in office (min 3 required)');
+  }
+  for(var pi=0;pi<PEOPLE.length;pi++){
+    var p=PEOPLE[pi];
+    var wks=all.filter(function(k){return schedule[k]&&schedule[k][p]==='wfh';});
+    for(var i=0;i<wks.length;i++){if(new Date(wks[i]+'T00:00:00').getDay()===3) add(wks[i],p+': WFH on Wednesday - policy requires in-office');}
+    for(var i=0;i<wks.length-1;i++){
+      var d1=new Date(wks[i]+'T00:00:00'),d2=new Date(wks[i+1]+'T00:00:00'),diff=(d2-d1)/864e5;
+      if(diff===1) add(wks[i],p+': consecutive WFH days ('+wks[i]+' & '+wks[i+1]+')');
+      if(d1.getDay()===5&&d2.getDay()===1&&diff===3) add(wks[i],p+': WFH Friday followed by WFH Monday');
+    }
+    var wkSet={};
+    for(var i=0;i<wks.length;i++) wkSet[getWeekStart(wks[i])]=true;
+    var wkKeys=Object.keys(wkSet);
+    for(var i=0;i<wkKeys.length;i++){if(leaveInWeek(p,wkKeys[i])) add(wkKeys[i],p+': leave/out during week of '+wkKeys[i]+' - WFH may need to move');}
+    var j18=schedule['2026-06-18']&&schedule['2026-06-18'][p];
+    var j22=schedule['2026-06-22']&&schedule['2026-06-22'][p];
+    if(j18==='wfh'&&j22==='wfh') add('2026-06-18',p+': WFH Jun 18 & Jun 22 - Juneteenth rule: only one allowed');
+    var j2=schedule['2026-07-02']&&schedule['2026-07-02'][p];
+    var j6=schedule['2026-07-06']&&schedule['2026-07-06'][p];
+    if(j2==='wfh'&&j6==='wfh') add('2026-07-02',p+': WFH Jul 2 & Jul 6 - July 4 rule: only one allowed');
+  }
+  return flags.sort(function(a,b){return a.date.localeCompare(b.date);});
+}
+
+function isFlagged(k,p,flags){for(var i=0;i<flags.length;i++){var f=flags[i];if((f.msg.indexOf(p+':')===0&&f.date===k)||(f.msg.indexOf('Coverage:')===0&&f.date===k)) return true;}return false;}
+function sCls(state,flagged){if(state==='wfh'&&flagged) return 'flag';return {in:'in',wfh:'wfh',out:'out',holiday:'holiday',weekend:'weekend'}[state]||'in';}
+function sLbl(state){return {in:'IN',wfh:'WFH',out:'OUT',holiday:'HOL',weekend:''}[state]||'';}
+
+// ── Interactions ──────────────────────────────────────────────────────────
+function cycleState(k,p){
+  var s=schedule[k]&&schedule[k][p];
+  if(!s||s==='weekend'||s==='holiday') return;
+  schedule[k][p]=CYCLE[(CYCLE.indexOf(s)+1)%CYCLE.length];
+  scheduleSave(); render();
+}
+function cycleSR(k){
+  var s=srSched[k];
+  if(!s||s==='weekend'||s==='holiday') return;
+  srSched[k]=CYCLE[(CYCLE.indexOf(s)+1)%CYCLE.length];
+  scheduleSave(); render();
+}
+function toggleMeeting(k){
+  if(meetingDays[k]) delete meetingDays[k];
+  else meetingDays[k]=true;
+  scheduleSave(); render();
+}
+function showTip(e,txt){var t=document.getElementById('tip');t.innerHTML=txt;t.style.display='block';t.style.left=Math.min(e.clientX+14,window.innerWidth-240)+'px';t.style.top=(e.clientY-8)+'px';}
+function hideTip(){document.getElementById('tip').style.display='none';}
+function goMonth(i){currentMonth=i;render();}
+
+function toggleNote(idx){
+  var area=document.getElementById('fn'+idx);
+  var btn=document.getElementById('fnb'+idx);
+  if(!area||!btn) return;
+  var visible=area.style.display!=='none';
+  area.style.display=visible?'none':'block';
+  if(!visible) area.focus();
+  var key=_currentFlags[idx]?(_currentFlags[idx].date+'||'+_currentFlags[idx].msg):'';
+  btn.textContent=visible?(flagNotes[key]?'edit note':'+ add note'):'hide note';
+}
+function noteInput(idx){
+  var area=document.getElementById('fn'+idx);
+  if(!area||!_currentFlags[idx]) return;
+  var key=_currentFlags[idx].date+'||'+_currentFlags[idx].msg;
+  flagNotes[key]=area.value;
+  scheduleSave();
+}
+function toggleResolve(idx){
+  for(var i=0;i<_currentFlags.length;i++){
+    var area=document.getElementById('fn'+i);
+    if(area&&area.style.display!=='none'&&_currentFlags[i]){
+      flagNotes[_currentFlags[i].date+'||'+_currentFlags[i].msg]=area.value;
+    }
+  }
+  if(!_currentFlags[idx]) return;
+  var key=_currentFlags[idx].date+'||'+_currentFlags[idx].msg;
+  flagResolved[key]=!flagResolved[key];
+  scheduleSave(); render();
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+function render(){
+  var flags=checkFlags();
+  _currentFlags=flags;
+  var monthWeeks=getMonthWeeks(currentMonth);
+
+  document.getElementById('summary').innerHTML=PEOPLE.map(function(p){
+    var total=Object.keys(schedule).filter(function(k){return inRange(k)&&schedule[k][p]==='wfh';}).length;
+    return '<div class="sum-card"><div class="sum-name">'+p+'</div><div class="sum-wfh">'+total+'</div><div class="sum-sub">WFH total</div></div>';
+  }).join('');
+
+  var cols=[];
+  for(var wi=0;wi<monthWeeks.length;wi++){
+    var wk=monthWeeks[wi];
+    for(var di=0;di<wk.length;di++) cols.push({d:wk[di].d,m:wk[di].m,k:wk[di].k,dow:wk[di].dow,ir:wk[di].ir,tag:wk[di].tag,wi:wi,isFirst:di===0});
+  }
+
+  var html='<table><thead><tr><th class="name-col">name</th>';
+  for(var ci=0;ci<cols.length;ci++){
+    var col=cols[ci];
+    var sep=(col.isFirst&&col.wi>0)?'border-left:2px solid #d3d1c7;':'';
+    var ov=(col.tag!=='this'&&col.isFirst)?'border-left:3px solid #c0dd97;':'';
+    var b=(col.isFirst&&col.wi>0)?sep:ov;
+    var dim=col.ir?'':'opacity:0.35;';
+    var ml=(col.tag!=='this')?'<div style="font-size:9px;color:#b4b2a9">'+MN[col.m]+'</div>':'';
+    var isMtg=col.ir&&meetingDays[col.k];
+    var dateColor=isMtg?'color:#c0392b;font-weight:700;':'';
+    var dotBg=isMtg?'#c0392b':'#d3d1c7';
+    var dotEl=col.ir?'<div class="mtg-dot" onclick="toggleMeeting(\''+col.k+'\')" title="Toggle meeting day" style="background:'+dotBg+'"></div>':'';
+    html+='<th class="'+(col.dow===3?'wed-col':'')+'" style="min-width:38px;'+b+dim+'">';
+    html+=ml+'<span style="'+dateColor+'">'+DOWS[col.dow]+'<br><span style="font-weight:400">'+col.d+'</span></span>'+dotEl+'</th>';
+  }
+  html+='</tr></thead><tbody>';
+
+  // Week label row
+  html+='<tr><td class="name-cell" style="font-size:10px;color:#b4b2a9;font-weight:400"></td>';
+  for(var ci=0;ci<cols.length;ci++){
+    var col=cols[ci];
+    var sep=(col.isFirst&&col.wi>0)?'border-left:2px solid #d3d1c7;':'';
+    var ov=(col.tag!=='this'&&col.isFirst)?'border-left:3px solid #c0dd97;':'';
+    var b=(col.isFirst&&col.wi>0)?sep:ov;
+    var lbl=col.isFirst?'<span style="font-size:10px;color:#b4b2a9;font-weight:500">wk of '+MN[monthWeeks[col.wi][0].m]+' '+monthWeeks[col.wi][0].d+'</span>':'';
+    html+='<td style="padding:3px 2px;border-bottom:0.5px solid #e8e6e0;'+b+'">'+lbl+'</td>';
+  }
+  html+='</tr>';
+
+  // Shannon row
+  html+='<tr><td class="name-cell">Shannon <span style="font-weight:400;font-size:10px;color:#b4b2a9">(supv)</span></td>';
+  for(var ci=0;ci<cols.length;ci++){
+    var col=cols[ci];
+    var sep=(col.isFirst&&col.wi>0)?'border-left:2px solid #d3d1c7;':'';
+    var ov=(col.tag!=='this'&&col.isFirst)?'border-left:3px solid #c0dd97;':'';
+    var b=(col.isFirst&&col.wi>0)?sep:ov;
+    var s=col.ir?(srSched[col.k]||'in'):'';
+    var locked=!col.ir||s==='weekend'||s==='holiday';
+    var c=col.ir?sCls(s,false):'';
+    var nextS=locked?'':CYCLE[(CYCLE.indexOf(s)+1)%CYCLE.length];
+    var tip=col.ir?(locked?'Shannon - '+DOWF[col.dow]+' '+col.k+' (locked)':'Shannon - '+col.k+': '+s+' > click for '+nextS):'outside range';
+    html+='<td class="'+(col.dow===3&&col.ir?'wed-col':'')+'" style="'+b+'">';
+    if(col.ir) html+='<div class="day-cell '+c+'" onclick="'+(locked?'':'cycleSR(\''+col.k+'\')')+'" onmouseenter="showTip(event,\''+tip+'\')" onmouseleave="hideTip()" style="'+(locked?'cursor:default;':'')+'">'+sLbl(s)+'</div>';
+    else html+='<div style="height:26px"></div>';
+    html+='</td>';
+  }
+  html+='</tr>';
+
+  // People rows
+  for(var pi=0;pi<PEOPLE.length;pi++){
+    var p=PEOPLE[pi];
+    html+='<tr><td class="name-cell">'+p+'</td>';
+    for(var ci=0;ci<cols.length;ci++){
+      var col=cols[ci];
+      var sep=(col.isFirst&&col.wi>0)?'border-left:2px solid #d3d1c7;':'';
+      var ov=(col.tag!=='this'&&col.isFirst)?'border-left:3px solid #c0dd97;':'';
+      var b=(col.isFirst&&col.wi>0)?sep:ov;
+      var s=(col.ir&&schedule[col.k])?schedule[col.k][p]:'';
+      var f=col.ir?isFlagged(col.k,p,flags):false;
+      var c=col.ir?sCls(s,f):'';
+      var locked=!col.ir||s==='weekend'||s==='holiday';
+      var nextS=locked?'':CYCLE[(CYCLE.indexOf(s)+1)%CYCLE.length];
+      var tip=col.ir?(locked?p+' - '+col.k+' (locked)':p+' - '+col.k+': '+s+' > click for '+nextS+(f?' - flagged':'')):'outside range';
+      html+='<td class="'+(col.dow===3&&col.ir?'wed-col':'')+'" style="'+b+'">';
+      if(col.ir) html+='<div class="day-cell '+c+'" onclick="'+(locked?'':'cycleState(\''+col.k+'\',\''+p+'\')')+'" onmouseenter="showTip(event,\''+tip+'\')" onmouseleave="hideTip()" style="'+(locked?'cursor:default;':'')+'">'+sLbl(s)+'</div>';
+      else html+='<div style="height:26px"></div>';
+      html+='</td>';
+    }
+    html+='</tr>';
+  }
+
+  // Coverage row
+  html+='<tr><td class="name-cell" style="font-size:10px;color:#b4b2a9;font-weight:400">in office</td>';
+  for(var ci=0;ci<cols.length;ci++){
+    var col=cols[ci];
+    var sep=(col.isFirst&&col.wi>0)?'border-left:2px solid #d3d1c7;':'';
+    var ov=(col.tag!=='this'&&col.isFirst)?'border-left:3px solid #c0dd97;':'';
+    var b=(col.isFirst&&col.wi>0)?sep:ov;
+    if(!col.ir||HOLIDAYS[col.k]){html+='<td style="'+b+'"><div style="height:22px"></div></td>';continue;}
+    var cnt=PEOPLE.filter(function(p){return schedule[col.k][p]==='in';}).length;
+    var c=cnt<3?'cov-bad':cnt===3?'cov-warn':'cov-ok';
+    html+='<td class="'+(col.dow===3?'wed-col':'')+'" style="'+b+'"><div class="cov-cell '+c+'">'+cnt+'</div></td>';
+  }
+  html+='</tr></tbody></table>';
+  document.getElementById('grid').innerHTML=html;
+
+  // Flags
+  var fs=document.getElementById('flags-section');
+  if(flags.length){
+    var items='';
+    for(var idx=0;idx<Math.min(flags.length,40);idx++){
+      var f=flags[idx];
+      var key=f.date+'||'+f.msg;
+      var note=flagNotes[key]||'';
+      var resolved=!!flagResolved[key];
+      items+='<div class="flag-item'+(resolved?' resolved':'')+'">';
+      items+='<div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap">';
+      items+='<span class="flag-date">'+f.date+'</span>';
+      items+='<span class="flag-msg">'+f.msg+'</span>';
+      if(resolved) items+='<span class="resolved-badge">RESOLVED</span>';
+      items+='</div>';
+      items+='<div class="flag-actions">';
+      items+='<button class="add-note-btn" id="fnb'+idx+'" onclick="toggleNote('+idx+')">'+(note?'edit note':'+ add note')+'</button>';
+      items+='<button class="resolve-btn" onclick="toggleResolve('+idx+')">'+(resolved?'↩ unresolve':'✓ mark resolved')+'</button>';
+      items+='</div>';
+      items+='<textarea class="flag-note" id="fn'+idx+'" placeholder="Add a suggested solution or note..." style="display:'+(note?'block':'none')+'" rows="2" oninput="noteInput('+idx+')">'+note+'</textarea>';
+      items+='</div>';
+    }
+    if(flags.length>40) items+='<div style="padding:6px 16px;font-size:11px;color:#b4b2a9">...and '+(flags.length-40)+' more</div>';
+    fs.innerHTML='<div class="flags-section"><div class="flags-header">&#9888; '+flags.length+' policy flag'+(flags.length!==1?'s':'')+' across the full summer</div><div class="flags-list">'+items+'</div></div>';
+  } else {
+    fs.innerHTML='<div class="flags-section"><p class="no-flags">&#10003; No policy flags - schedule looks good!</p></div>';
+  }
+
+  [0,1,2].forEach(function(i){document.getElementById('mb-'+i).classList.toggle('active',i===currentMonth);});
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+initSchedule();
+loadFromDB();
+
+// Auto-refresh every 30 seconds to pick up other users' changes
+setInterval(function(){
+  var ks=Object.keys(schedule);
+  for(var i=0;i<ks.length;i++){var k=ks[i];defaultSchedule[k]={};for(var pi=0;pi<PEOPLE.length;pi++) defaultSchedule[k][PEOPLE[pi]]=schedule[k][PEOPLE[pi]];}
+  var srks=Object.keys(srSched);
+  for(var i=0;i<srks.length;i++) defaultSR[srks[i]]=srSched[srks[i]];
+  initSchedule();
+  loadFromDB();
+}, 30000);
+</script>
+</body>
+</html>
